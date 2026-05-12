@@ -37,6 +37,7 @@ const chipStyles = StyleSheet.create({
 export default function TaxDetailsScreen() {
   const router = useRouter();
   const { businessProfile, saveBusinessProfile, completeOnboarding } = useAuth();
+  const isBusiness = businessProfile?.accountType === 'business';
 
   const [taxId, setTaxId] = useState(businessProfile?.taxId || '');
   const [taxType, setTaxType] = useState(businessProfile?.taxType || 'Sales Tax');
@@ -60,7 +61,7 @@ export default function TaxDetailsScreen() {
       nextInvoiceNumber: businessProfile?.nextInvoiceNumber || 1001,
     });
     await completeOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/onboarding/connect-payments');
   };
 
   return (
@@ -92,9 +93,11 @@ export default function TaxDetailsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionLabel}>Tax information</Text>
             <View style={styles.row2}>
-              <View style={styles.flex1}>
-                <Input label="Tax ID / EIN / VAT" placeholder="12-3456789" value={taxId} onChangeText={setTaxId} leftIcon="badge" />
-              </View>
+              {isBusiness ? (
+                <View style={styles.flex1}>
+                  <Input label="Tax ID / EIN / VAT" placeholder="12-3456789" value={taxId} onChangeText={setTaxId} leftIcon="badge" />
+                </View>
+              ) : null}
               <View style={styles.flex1}>
                 <Input label="Tax rate (%)" placeholder="0" value={defaultTaxRate} onChangeText={setDefaultTaxRate} keyboardType="decimal-pad" leftIcon="percent" />
               </View>
@@ -127,7 +130,7 @@ export default function TaxDetailsScreen() {
           </View>
 
           <Button title="Complete Setup" onPress={handleFinish} fullWidth size="lg" />
-          <Pressable onPress={() => { completeOnboarding(); router.replace('/(tabs)'); }} style={styles.skipBtn}>
+          <Pressable onPress={() => { completeOnboarding(); router.replace('/onboarding/connect-payments'); }} style={styles.skipBtn}>
             <Text style={styles.skipText}>Skip for now</Text>
           </Pressable>
           <View style={{ height: 24 }} />

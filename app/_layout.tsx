@@ -20,6 +20,7 @@ export default function RootLayout() {
                 <Stack.Screen name="onboarding/index" />
                 <Stack.Screen name="onboarding/business-details" />
                 <Stack.Screen name="onboarding/tax-details" />
+                <Stack.Screen name="onboarding/connect-payments" />
                 <Stack.Screen name="invoice/create" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="invoice/[id]" />
                 <Stack.Screen name="invoice/ai-scan" options={{ presentation: 'modal' }} />
@@ -33,6 +34,8 @@ export default function RootLayout() {
                 <Stack.Screen name="settings/expenses" />
                 <Stack.Screen name="settings/time-tracking" />
                 <Stack.Screen name="settings/email-delivery" />
+                <Stack.Screen name="billing/success" />
+                <Stack.Screen name="billing/cancelled" />
               </Stack>
             </ClientProvider>
           </InvoiceProvider>

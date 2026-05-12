@@ -19,7 +19,7 @@ import { useAlert } from '@/template';
 import type { PlanId } from '@/types';
 import type { AIExtractionResult } from '@/services/aiService';
 
-type Stage = 'pick' | 'scanning' | 'review' | 'error';
+type Stage = 'pick' | 'scanning' | 'review' | 'error' | 'paywall';
 
 interface ScanStep {
   label: string;
@@ -50,14 +50,7 @@ export default function AIScanScreen() {
     const month = new Date().toISOString().slice(0, 7);
     const count = stored?.month === month ? stored.count : 0;
     if (count >= plan.aiScansPerMonth) {
-      showAlert(
-        'Scan limit reached',
-        `Your ${plan.name} plan includes ${plan.aiScansPerMonth} AI scan(s)/month. Upgrade to Pro for unlimited scans.`,
-        [
-          { text: 'Upgrade', onPress: () => router.push('/settings/plans') },
-          { text: 'Cancel', style: 'cancel', onPress: () => router.back() },
-        ]
-      );
+      setStage('paywall');
       return false;
     }
     return true;
@@ -109,7 +102,8 @@ export default function AIScanScreen() {
         showAlert('Clipboard empty', 'Copy a screenshot first, then tap Paste Screenshot.');
         return;
       }
-      await runScanDataUrl(image.data);
+      const dataUrl = image.data.startsWith('data:') ? image.data : `data:image/png;base64,${image.data}`;
+      await runScanDataUrl(dataUrl);
     } catch {
       showAlert('Paste unavailable', 'This device or browser does not allow image clipboard access here.');
     }
@@ -332,6 +326,35 @@ export default function AIScanScreen() {
               ))}
             </View>
           </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (stage === 'paywall') {
+    return (
+      <SafeAreaView style={styles.screen}>
+        <View style={styles.header}>
+          <Pressable onPress={() => router.back()} hitSlop={8}>
+            <MaterialIcons name="close" size={22} color={Colors.text} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Upgrade Required</Text>
+          <View style={{ width: 30 }} />
+        </View>
+        <View style={styles.paywallWrap}>
+          <LinearGradient colors={['#DBEAFE', '#FCE7F3']} style={styles.paywallIcon}>
+            <MaterialIcons name="auto-awesome" size={28} color={Colors.primary} />
+          </LinearGradient>
+          <Text style={styles.paywallTitle}>You are out of AI scans</Text>
+          <Text style={styles.paywallSubtitle}>
+            Your {plan.name} plan includes {plan.aiScansPerMonth} AI scan per month. Upgrade to Pro for unlimited scans.
+          </Text>
+          <Pressable style={styles.paywallBtn} onPress={() => router.replace('/settings/plans')}>
+            <Text style={styles.paywallBtnText}>Upgrade Plan</Text>
+          </Pressable>
+          <Pressable onPress={() => router.back()} style={styles.paywallSecondary}>
+            <Text style={styles.paywallSecondaryText}>Maybe later</Text>
+          </Pressable>
         </View>
       </SafeAreaView>
     );
@@ -572,6 +595,14 @@ const styles = StyleSheet.create({
   scanStepDot: { width: 16, height: 16, borderRadius: 8, borderWidth: 2, borderColor: 'rgba(255,255,255,0.3)' },
   scanStepText: { ...Typography.bodySmall, color: 'rgba(255,255,255,0.6)', includeFontPadding: false },
   scanStepDone: { color: '#fff', fontWeight: '500' },
+  paywallWrap: { flex: 1, padding: Spacing.xl, alignItems: 'center', justifyContent: 'center', gap: 14 },
+  paywallIcon: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  paywallTitle: { ...Typography.heading, color: Colors.text, includeFontPadding: false },
+  paywallSubtitle: { ...Typography.body, color: Colors.textSecondary, textAlign: 'center', maxWidth: 320, includeFontPadding: false },
+  paywallBtn: { marginTop: 8, backgroundColor: Colors.primary, borderRadius: Radius.md, paddingHorizontal: 24, paddingVertical: 12 },
+  paywallBtnText: { ...Typography.button, color: '#fff', includeFontPadding: false },
+  paywallSecondary: { paddingVertical: 8 },
+  paywallSecondaryText: { ...Typography.body, color: Colors.textTertiary, includeFontPadding: false },
 
   // Error
   errorContent: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Spacing.xl, gap: 16 },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { storage } from '@/services/storageService';
 import { STORAGE_KEYS, PAYMENT_GATEWAYS } from '@/constants/config';
 import { Colors, Spacing, Typography, Radius, Shadow } from '@/constants/theme';
@@ -55,7 +56,7 @@ export default function GatewaysScreen() {
               style={({ pressed }) => [styles.gatewayCard, pressed && styles.cardPressed]}
             >
               <View style={[styles.gatewayIconWrap, { backgroundColor: item.color + '18' }]}>
-                <Text style={styles.gatewayLogo}>{item.logo}</Text>
+                <Image source={{ uri: item.logoUrl }} style={styles.gatewayLogo} contentFit="contain" />
               </View>
               <View style={styles.gatewayInfo}>
                 <View style={styles.gatewayNameRow}>
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
   gatewayCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, flexDirection: 'row', alignItems: 'center', gap: 14, ...Shadow.sm },
   cardPressed: { opacity: 0.88 },
   gatewayIconWrap: { width: 52, height: 52, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  gatewayLogo: { fontSize: 28 },
+  gatewayLogo: { width: 30, height: 30, borderRadius: 6, backgroundColor: '#fff' },
   gatewayInfo: { flex: 1, gap: 4 },
   gatewayNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   gatewayName: { ...Typography.subheading, color: Colors.text, includeFontPadding: false },

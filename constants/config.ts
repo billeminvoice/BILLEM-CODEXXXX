@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   GATEWAYS: '@billem_gateways',
   AI_SCAN_COUNT: '@billem_ai_scan_count',
   SUBSCRIPTION: '@billem_subscription',
+  PAYMENT_CTA_DONE: '@billem_payment_cta_done',
 };
 
 export const PAYMENT_BASE_URL =
@@ -71,7 +72,7 @@ export const PAYMENT_GATEWAYS = [
   {
     id: 'stripe',
     name: 'Stripe',
-    logo: '💳',
+    logoUrl: 'https://logo.clearbit.com/stripe.com',
     description: 'Accept cards, ACH, Apple Pay & more',
     color: '#635BFF',
     fields: ['Publishable Key', 'Secret Key', 'Webhook Secret'],
@@ -80,7 +81,7 @@ export const PAYMENT_GATEWAYS = [
   {
     id: 'paypal',
     name: 'PayPal',
-    logo: '🅿️',
+    logoUrl: 'https://logo.clearbit.com/paypal.com',
     description: 'PayPal, Venmo & credit cards worldwide',
     color: '#003087',
     fields: ['Client ID', 'Client Secret', 'Merchant ID'],

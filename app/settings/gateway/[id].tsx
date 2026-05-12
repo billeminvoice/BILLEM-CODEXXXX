@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { storage } from '@/services/storageService';
 import { paymentService } from '@/services/paymentService';
 import { STORAGE_KEYS, PAYMENT_GATEWAYS } from '@/constants/config';
@@ -113,7 +114,7 @@ export default function GatewayDetailScreen() {
           {/* Gateway info */}
           <View style={[styles.gatewayCard, { borderColor: gateway.color + '40' }]}>
             <View style={[styles.gatewayIcon, { backgroundColor: gateway.color + '15' }]}>
-              <Text style={styles.gatewayLogo}>{gateway.logo}</Text>
+              <Image source={{ uri: gateway.logoUrl }} style={styles.gatewayLogo} contentFit="contain" />
             </View>
             <View style={styles.gatewayInfo}>
               <Text style={styles.gatewayName}>{gateway.name}</Text>
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.xl, gap: Spacing.lg },
   gatewayCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, borderWidth: 1.5, ...Shadow.sm },
   gatewayIcon: { width: 52, height: 52, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  gatewayLogo: { fontSize: 28 },
+  gatewayLogo: { width: 30, height: 30, borderRadius: 6, backgroundColor: '#fff' },
   gatewayInfo: { flex: 1 },
   gatewayName: { ...Typography.subheading, color: Colors.text, includeFontPadding: false },
   gatewayDesc: { ...Typography.caption, color: Colors.textSecondary, marginTop: 2, includeFontPadding: false },

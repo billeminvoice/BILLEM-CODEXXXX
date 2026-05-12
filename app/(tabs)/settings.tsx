@@ -5,15 +5,17 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { PLANS, PAYMENT_GATEWAYS, STORAGE_KEYS } from '@/constants/config';
 import { storage } from '@/services/storageService';
-import { Spacing, Typography } from '@/constants/theme';
+import { Colors, Radius, Shadow, Spacing, Typography } from '@/constants/theme';
 import type { GatewayConnection } from '@/types';
 
 function Row({ icon, label, onPress, showDivider = true }: { icon: string; label: string; onPress: () => void; showDivider?: boolean }) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
-      <MaterialIcons name={icon as any} size={30} color="#E5E7EB" />
+      <View style={styles.rowIcon}>
+        <MaterialIcons name={icon as any} size={18} color={Colors.textSecondary} />
+      </View>
       <Text style={styles.rowLabel}>{label}</Text>
-      <MaterialIcons name="chevron-right" size={34} color="#6B7280" />
+      <MaterialIcons name="chevron-right" size={20} color={Colors.textTertiary} />
       {showDivider ? <View style={styles.rowDivider} /> : null}
     </Pressable>
   );
@@ -45,7 +47,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.screen}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <Section title="Payments">
-          <Row icon="download" label={`Payments Received (${connectedGateways}/${PAYMENT_GATEWAYS.length} connected)`} onPress={() => router.push('/settings/gateways')} />
+          <Row icon="payments" label={`Payment Gateways (${connectedGateways}/${PAYMENT_GATEWAYS.length} connected)`} onPress={() => router.push('/settings/gateways')} />
           <Row icon="credit-card" label="Billing Plan" onPress={() => router.push('/settings/plans')} showDivider={false} />
         </Section>
 
@@ -79,15 +81,16 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#030712' },
-  content: { paddingHorizontal: Spacing.lg, paddingBottom: 90, gap: 24 },
-  sectionWrap: { gap: 12 },
-  sectionTitle: { ...Typography.heading, color: '#9CA3AF', includeFontPadding: false },
-  card: { borderRadius: 34, backgroundColor: '#111827', overflow: 'hidden' },
-  row: { minHeight: 104, paddingHorizontal: 22, flexDirection: 'row', alignItems: 'center', gap: 18, position: 'relative' },
-  rowPressed: { backgroundColor: '#1F2937' },
-  rowLabel: { ...Typography.title, color: '#F3F4F6', flex: 1, includeFontPadding: false },
-  rowDivider: { position: 'absolute', left: 84, right: 22, bottom: 0, height: 1, backgroundColor: '#374151' },
-  planSummary: { alignItems: 'center', paddingVertical: 8 },
-  planSummaryText: { ...Typography.caption, color: '#9CA3AF', includeFontPadding: false },
+  screen: { flex: 1, backgroundColor: Colors.surfaceSecondary },
+  content: { paddingHorizontal: Spacing.lg, paddingBottom: 90, gap: 20, paddingTop: Spacing.sm },
+  sectionWrap: { gap: 10 },
+  sectionTitle: { ...Typography.subheading, color: Colors.textTertiary, includeFontPadding: false },
+  card: { borderRadius: Radius.xl, backgroundColor: Colors.surface, overflow: 'hidden', ...Shadow.sm },
+  row: { minHeight: 66, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 12, position: 'relative' },
+  rowPressed: { backgroundColor: '#F8FAFC' },
+  rowIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surfaceTertiary },
+  rowLabel: { ...Typography.body, color: Colors.text, flex: 1, fontWeight: '600', includeFontPadding: false },
+  rowDivider: { position: 'absolute', left: 62, right: 16, bottom: 0, height: 1, backgroundColor: Colors.divider },
+  planSummary: { alignItems: 'center', paddingVertical: 6 },
+  planSummaryText: { ...Typography.caption, color: Colors.textTertiary, includeFontPadding: false },
 });

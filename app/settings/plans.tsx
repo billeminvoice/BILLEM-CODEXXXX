@@ -20,7 +20,7 @@ const PLAN_COLORS: Record<PlanId, [string, string]> = {
 
 export default function PlansScreen() {
   const router = useRouter();
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const { showAlert } = useAlert();
   const [loading, setLoading] = useState<PlanId | null>(null);
   const currentPlan = user?.planId || 'free';
@@ -37,10 +37,7 @@ export default function PlansScreen() {
       if (checkoutUrl) {
         await Linking.openURL(checkoutUrl);
       }
-      const { authService } = await import('@/services/authService');
-      await authService.updatePlan(planId);
-      await refreshUser();
-      showAlert('Plan selected', `Stripe checkout is open for the ${PLANS[planId].name} plan. Your app limits are updated for this device.`);
+      showAlert('Checkout opened', `Complete Stripe checkout for the ${PLANS[planId].name} plan. We update your plan after successful payment.`);
     } catch (e: any) {
       showAlert('Checkout unavailable', e.message || 'Add your Stripe billing keys to enable subscription checkout.');
     } finally {
