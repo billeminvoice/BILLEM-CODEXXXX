@@ -32,6 +32,7 @@ async function uriToBase64(uri: string): Promise<string> {
   if (lower.includes('.png')) mimeType = 'image/png';
   else if (lower.includes('.webp')) mimeType = 'image/webp';
   else if (lower.includes('.gif')) mimeType = 'image/gif';
+  else if (lower.includes('.heic') || lower.includes('.heif')) mimeType = 'image/heic';
   else if (lower.includes('.pdf')) mimeType = 'application/pdf';
   return `data:${mimeType};base64,${base64}`;
 }
@@ -70,9 +71,10 @@ export const aiService = {
 
   extractFromDataUrl: async (dataUrl: string): Promise<AIExtractionResult> => {
     const supabase = getSupabaseClient();
+    const normalized = dataUrl.startsWith('data:') ? dataUrl : `data:image/png;base64,${dataUrl}`;
 
     const { data, error } = await supabase.functions.invoke('ai-extract-invoice', {
-      body: { imageBase64: dataUrl },
+      body: { imageBase64: normalized },
     });
 
     if (error) {

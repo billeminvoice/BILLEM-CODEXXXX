@@ -57,19 +57,30 @@ Deno.serve(async (req: Request) => {
       throw new Error('AI extraction is not configured. Add OPENAI_API_KEY.');
     }
 
-    // Build image content part
-    let imageContent: any;
+    // Build content part (image or PDF)
+    let mediaContent: any;
     if (imageBase64) {
-      imageContent = {
-        type: 'image_url',
-        image_url: {
-          url: imageBase64, // already formatted as data:image/jpeg;base64,...
-        },
-      };
+      if (String(imageBase64).startsWith('data:application/pdf')) {
+        mediaContent = {
+          type: 'file',
+          file: {
+            file_data: imageBase64,
+            file_name: 'invoice.pdf',
+          },
+        };
+      } else {
+        mediaContent = {
+          type: 'image_url',
+          image_url: {
+            url: imageBase64, // already formatted as data:image/jpeg;base64,...
+            detail: 'high',
+          },
+        };
+      }
     } else if (imageUrl) {
-      imageContent = {
+      mediaContent = {
         type: 'image_url',
-        image_url: { url: imageUrl },
+        image_url: { url: imageUrl, detail: 'high' },
       };
     } else {
       throw new Error('No image provided');
@@ -91,10 +102,11 @@ Deno.serve(async (req: Request) => {
                 type: 'text',
                 text: SYSTEM_PROMPT,
               },
-              imageContent,
+              mediaContent,
             ],
           },
         ],
+        response_format: { type: 'json_object' },
         max_tokens: 2048,
       }),
     });
