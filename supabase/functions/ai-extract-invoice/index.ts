@@ -1,184 +1,151 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
-const SYSTEM_PROMPT = `You are an expert invoice data extractor. Analyze the provided image and extract all invoice-related information with maximum accuracy.
+const SYSTEM_PROMPT = `You are an expert invoice data extractor. Analyze the provided document and extract invoice-related information.
 
-Return ONLY a valid JSON object with this exact structure (no markdown, no explanation):
+Return ONLY a valid JSON object with this exact structure:
 {
-  "clientName": "extracted business or person name (string, or empty string if not found)",
-  "clientEmail": "extracted email (string, or empty string if not found)",
-  "clientPhone": "extracted phone (string, or empty string if not found)",
-  "clientAddress": "extracted address (string, or empty string if not found)",
+  "clientName": "",
+  "clientEmail": "",
+  "clientPhone": "",
+  "clientAddress": "",
   "lineItems": [
-    {
-      "description": "item description (string)",
-      "quantity": 1,
-      "rate": 0.00
-    }
+    { "description": "", "quantity": 1, "rate": 0.0 }
   ],
-  "subtotal": 0.00,
-  "taxRate": 0.00,
-  "discountValue": 0.00,
+  "subtotal": 0.0,
+  "taxRate": 0.0,
+  "discountValue": 0.0,
   "discountType": "percent",
-  "notes": "any payment notes or special instructions (string)",
-  "dueDate": "YYYY-MM-DD format due date (string, or empty if not found)",
-  "issueDate": "YYYY-MM-DD format issue date (string, or empty if not found)",
-  "invoiceNumber": "invoice number if visible (string, or empty)",
-  "currency": "3-letter currency code like USD, EUR, GBP (string)",
-  "confidence": 0.95
+  "notes": "",
+  "dueDate": "",
+  "issueDate": "",
+  "invoiceNumber": "",
+  "currency": "USD",
+  "confidence": 0.9
 }
 
 Rules:
-- Extract ALL line items visible in the image
-- If the source is a chat screenshot, estimate line items from the discussed work, quantities, and prices
-- Prefer the buyer/client name over the sender/business name when both are visible
-- Calculate quantity × rate for each item and reconcile with visible subtotal/total
-- If quantity is missing, use 1
-- If a line shows only an amount, use quantity 1 and rate equal to that amount
-- Set taxRate as a percentage number (e.g., 8.5 for 8.5%)
-- Set discountValue as a percentage number
-- If currency symbol is $, use USD. If £, use GBP. If €, use EUR.
-- confidence should be between 0 and 1 based on image clarity
-- Do not invent emails, phone numbers, addresses, taxes, or invoice numbers that are not visible
-- NEVER include markdown fences or extra text — only the JSON object`;
+- Extract all visible line items.
+- If quantity is missing, use 1.
+- If only an amount is visible for a line item, use quantity=1 and rate=that amount.
+- taxRate is a percentage number (e.g. 8.25).
+- discountValue is percentage unless clearly fixed amount.
+- Never invent data not visible in the document.
+- Never return markdown fences or extra commentary.`;
+
+function json(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+function toNumber(v: unknown, fallback = 0) {
+  const n = typeof v === 'number' ? v : parseFloat(String(v ?? ''));
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function toDateOrEmpty(v: unknown) {
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
+}
+
+function sanitizeResult(extracted: any) {
+  const lineItems = Array.isArray(extracted?.lineItems)
+    ? extracted.lineItems
+        .map((li: any) => ({
+          description: String(li?.description || '').trim(),
+          quantity: Math.max(0, toNumber(li?.quantity, 1)),
+          rate: Math.max(0, toNumber(li?.rate, 0)),
+        }))
+        .filter((li: any) => li.description || li.rate > 0)
+    : [];
+
+  return {
+    clientName: String(extracted?.clientName || '').trim(),
+    clientEmail: String(extracted?.clientEmail || '').trim(),
+    clientPhone: String(extracted?.clientPhone || '').trim(),
+    clientAddress: String(extracted?.clientAddress || '').trim(),
+    lineItems: lineItems.length > 0 ? lineItems : [{ description: 'Service', quantity: 1, rate: 0 }],
+    subtotal: Math.max(0, toNumber(extracted?.subtotal, 0)),
+    taxRate: Math.max(0, toNumber(extracted?.taxRate, 0)),
+    discountValue: Math.max(0, toNumber(extracted?.discountValue, 0)),
+    discountType: extracted?.discountType === 'fixed' ? 'fixed' : 'percent',
+    notes: String(extracted?.notes || '').trim(),
+    dueDate: toDateOrEmpty(extracted?.dueDate),
+    issueDate: toDateOrEmpty(extracted?.issueDate),
+    invoiceNumber: String(extracted?.invoiceNumber || '').trim(),
+    currency: String(extracted?.currency || 'USD').toUpperCase().slice(0, 3),
+    confidence: Math.min(1, Math.max(0, toNumber(extracted?.confidence, 0.8))),
+  };
+}
+
+function parseModelJson(raw: string) {
+  const cleaned = raw
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/gi, '')
+    .trim();
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('Could not parse AI response as JSON');
+    return JSON.parse(match[0]);
+  }
+}
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
     const { imageBase64, imageUrl } = await req.json();
-
     const apiKey = Deno.env.get('OPENAI_API_KEY');
-    const baseUrl = 'https://api.openai.com/v1';
     const model = Deno.env.get('OPENAI_VISION_MODEL') || 'gpt-4o-mini';
 
     if (!apiKey) {
-      throw new Error('AI extraction is not configured. Add OPENAI_API_KEY.');
+      return json({ success: false, error: 'OPENAI_API_KEY is missing in Supabase function secrets.' }, 500);
     }
 
-    // Build content part (image or PDF)
-    let mediaContent: any;
-    if (imageBase64) {
-      if (String(imageBase64).startsWith('data:application/pdf')) {
-        mediaContent = {
-          type: 'file',
-          file: {
-            file_data: imageBase64,
-            file_name: 'invoice.pdf',
-          },
-        };
-      } else {
-        mediaContent = {
-          type: 'image_url',
-          image_url: {
-            url: imageBase64, // already formatted as data:image/jpeg;base64,...
-            detail: 'high',
-          },
-        };
-      }
-    } else if (imageUrl) {
-      mediaContent = {
-        type: 'image_url',
-        image_url: { url: imageUrl, detail: 'high' },
-      };
-    } else {
-      throw new Error('No image provided');
-    }
+    const inputImageUrl = imageBase64 || imageUrl;
+    if (!inputImageUrl) return json({ success: false, error: 'No image provided' }, 400);
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model,
+        response_format: { type: 'json_object' },
         messages: [
           {
             role: 'user',
             content: [
-              {
-                type: 'text',
-                text: SYSTEM_PROMPT,
-              },
-              mediaContent,
+              { type: 'text', text: SYSTEM_PROMPT },
+              { type: 'image_url', image_url: { url: inputImageUrl, detail: 'high' } },
             ],
           },
         ],
-        response_format: { type: 'json_object' },
-        max_tokens: 2048,
+        temperature: 0.1,
+        max_tokens: 1800,
       }),
     });
 
+    const rawResponse = await response.text();
     if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`AI API error: ${errText}`);
+      return json(
+        { success: false, error: `OpenAI request failed: ${rawResponse.slice(0, 500)}` },
+        502
+      );
     }
 
-    const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content ?? '';
-
-    // Strip markdown fences if present
-    const jsonStr = rawContent
-      .replace(/```json\n?/gi, '')
-      .replace(/```\n?/gi, '')
-      .trim();
-
-    let extracted: any;
-    try {
-      extracted = JSON.parse(jsonStr);
-    } catch {
-      // Try to find JSON object in response
-      const match = jsonStr.match(/\{[\s\S]*\}/);
-      if (match) {
-        extracted = JSON.parse(match[0]);
-      } else {
-        throw new Error('Could not parse AI response as JSON');
-      }
-    }
-
-    // Validate and sanitize
-    const result = {
-      clientName: String(extracted.clientName || ''),
-      clientEmail: String(extracted.clientEmail || ''),
-      clientPhone: String(extracted.clientPhone || ''),
-      clientAddress: String(extracted.clientAddress || ''),
-      lineItems: Array.isArray(extracted.lineItems)
-        ? extracted.lineItems.map((li: any) => ({
-            description: String(li.description || ''),
-            quantity: parseFloat(li.quantity) || 1,
-            rate: parseFloat(li.rate) || 0,
-          }))
-        : [],
-      subtotal: parseFloat(extracted.subtotal) || 0,
-      taxRate: parseFloat(extracted.taxRate) || 0,
-      discountValue: parseFloat(extracted.discountValue) || 0,
-      discountType: extracted.discountType === 'fixed' ? 'fixed' : 'percent',
-      notes: String(extracted.notes || ''),
-      dueDate: String(extracted.dueDate || ''),
-      issueDate: String(extracted.issueDate || ''),
-      invoiceNumber: String(extracted.invoiceNumber || ''),
-      currency: String(extracted.currency || 'USD'),
-      confidence: Math.min(1, Math.max(0, parseFloat(extracted.confidence) || 0.8)),
-    };
-
-    // Ensure lineItems are not empty
-    if (result.lineItems.length === 0) {
-      result.lineItems = [{ description: 'Service', quantity: 1, rate: 0 }];
-    }
-
-    return new Response(JSON.stringify({ success: true, data: result }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const parsed = JSON.parse(rawResponse);
+    const content = parsed?.choices?.[0]?.message?.content || '';
+    const extracted = parseModelJson(String(content));
+    const data = sanitizeResult(extracted);
+    return json({ success: true, data });
   } catch (error: any) {
-    console.error('AI Extract error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message || 'Extraction failed' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return json({ success: false, error: error?.message || 'Extraction failed' }, 500);
   }
 });

@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '@/template';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as FileSystem from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 import type { LineItem } from '@/types';
 
 export interface AIExtractionResult {
@@ -22,18 +23,22 @@ export interface AIExtractionResult {
 }
 
 async function uriToBase64(uri: string): Promise<string> {
-  // Read as base64
-  const base64 = await FileSystem.readAsStringAsync(uri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-  // Detect type by extension
   const lower = uri.toLowerCase();
-  let mimeType = 'image/jpeg';
-  if (lower.includes('.png')) mimeType = 'image/png';
-  else if (lower.includes('.webp')) mimeType = 'image/webp';
-  else if (lower.includes('.gif')) mimeType = 'image/gif';
-  else if (lower.includes('.heic') || lower.includes('.heif')) mimeType = 'image/heic';
-  else if (lower.includes('.pdf')) mimeType = 'application/pdf';
+  if (lower.includes('.pdf')) {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return `data:application/pdf;base64,${base64}`;
+  }
+
+  // Normalize all images to JPEG to avoid format incompatibilities (HEIC/WEBP/etc)
+  const normalized = await ImageManipulator.manipulateAsync(uri, [], {
+    compress: 0.92,
+    format: ImageManipulator.SaveFormat.JPEG,
+    base64: true,
+  });
+  const base64 = normalized.base64 || '';
+  const mimeType = 'image/jpeg';
   return `data:${mimeType};base64,${base64}`;
 }
 

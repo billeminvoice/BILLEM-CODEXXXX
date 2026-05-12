@@ -1,6 +1,6 @@
 import { corsHeaders } from '../_shared/cors.ts';
 
-const SUPPORTED = new Set(['stripe', 'paypal']);
+const SUPPORTED = new Set(['stripe']);
 
 async function encryptJson(value: unknown, secret: string) {
   const enc = new TextEncoder();
