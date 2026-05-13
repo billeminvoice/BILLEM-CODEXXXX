@@ -5,6 +5,7 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
 import { Input, Button } from '@/components';
@@ -53,9 +54,7 @@ export default function SignUpScreen() {
             <MaterialIcons name="arrow-back" size={24} color={Colors.text} />
           </Pressable>
           <View style={styles.logoWrap}>
-            <LinearGradient colors={['#3B82F6', '#818CF8', '#F472B6']} style={styles.logoGrad}>
-              <MaterialIcons name="receipt-long" size={28} color="#fff" />
-            </LinearGradient>
+            <Image source={require('@/assets/images/brand-logo.png')} style={styles.logoImg} contentFit="cover" />
           </View>
         </LinearGradient>
 
@@ -131,7 +130,7 @@ const styles = StyleSheet.create({
   header: { paddingTop: 56, paddingBottom: 32, paddingHorizontal: Spacing.xl, alignItems: 'center' },
   backBtn: { position: 'absolute', top: 56, left: Spacing.xl, padding: 4, zIndex: 1 },
   logoWrap: { marginBottom: 4 },
-  logoGrad: { width: 60, height: 60, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  logoImg: { width: 60, height: 60, borderRadius: 16 },
   form: { flex: 1, padding: Spacing.xl, gap: Spacing.md },
   title: { ...Typography.title, color: Colors.text, includeFontPadding: false },
   subtitle: { ...Typography.body, color: Colors.textSecondary, marginTop: 4, includeFontPadding: false },

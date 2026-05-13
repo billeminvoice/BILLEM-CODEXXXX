@@ -72,20 +72,11 @@ export const PAYMENT_GATEWAYS = [
   {
     id: 'stripe',
     name: 'Stripe',
-    logoUrl: 'https://logo.clearbit.com/stripe.com',
+    logoAsset: require('../assets/images/stripe-wordmark.png'),
     description: 'Accept cards, ACH, Apple Pay & more',
     color: '#635BFF',
     fields: ['Publishable Key', 'Secret Key', 'Webhook Secret'],
     features: ['Cards', 'ACH', 'Apple Pay', 'Google Pay', 'Subscriptions'],
-  },
-  {
-    id: 'paypal',
-    name: 'PayPal',
-    logoUrl: 'https://logo.clearbit.com/paypal.com',
-    description: 'PayPal, Venmo & credit cards worldwide',
-    color: '#003087',
-    fields: ['Client ID', 'Client Secret', 'Merchant ID'],
-    features: ['PayPal', 'Venmo', 'Credit Cards', 'Pay Later'],
   },
 ];
 

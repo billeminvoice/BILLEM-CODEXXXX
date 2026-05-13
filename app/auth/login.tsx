@@ -5,10 +5,11 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
 import { Input, Button } from '@/components';
-import { Colors, Spacing, Typography, Radius } from '@/constants/theme';
+import { Colors, Spacing, Typography } from '@/constants/theme';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,9 +42,7 @@ export default function LoginScreen() {
         {/* Header */}
         <LinearGradient colors={['#EFF6FF', '#FDF2F8']} style={styles.header}>
           <View style={styles.logoWrap}>
-            <LinearGradient colors={['#3B82F6', '#818CF8', '#F472B6']} style={styles.logoGrad}>
-              <MaterialIcons name="receipt-long" size={32} color="#fff" />
-            </LinearGradient>
+            <Image source={require('@/assets/images/brand-logo.png')} style={styles.logoImg} contentFit="cover" />
           </View>
           <Text style={styles.appName}>Bill&apos;em Invoice</Text>
           <Text style={styles.tagline}>Smart invoicing powered by AI</Text>
@@ -84,17 +83,6 @@ export default function LoginScreen() {
 
           <Button title="Sign In" onPress={handleLogin} loading={loading} fullWidth size="lg" />
 
-          <View style={styles.dividerRow}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.divider} />
-          </View>
-
-          <Pressable style={styles.googleBtn}>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleText}>Continue with Google</Text>
-          </Pressable>
-
           <View style={styles.signupRow}>
             <Text style={styles.signupText}>Don&apos;t have an account? </Text>
             <Pressable onPress={() => router.push('/auth/signup')}>
@@ -112,7 +100,7 @@ const styles = StyleSheet.create({
   content: { flexGrow: 1 },
   header: { alignItems: 'center', paddingTop: 72, paddingBottom: 40, paddingHorizontal: Spacing.xl },
   logoWrap: { marginBottom: 12 },
-  logoGrad: { width: 72, height: 72, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  logoImg: { width: 72, height: 72, borderRadius: 20 },
   appName: { ...Typography.hero, color: Colors.text, includeFontPadding: false },
   tagline: { ...Typography.body, color: Colors.textSecondary, marginTop: 4, includeFontPadding: false },
   form: { flex: 1, padding: Spacing.xl, gap: Spacing.md },
@@ -121,21 +109,6 @@ const styles = StyleSheet.create({
   fields: { gap: Spacing.md },
   forgotWrap: { alignSelf: 'flex-end' },
   forgot: { ...Typography.label, color: Colors.primary, includeFontPadding: false },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  divider: { flex: 1, height: 1, backgroundColor: Colors.border },
-  dividerText: { ...Typography.caption, color: Colors.textTertiary, includeFontPadding: false },
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: Radius.md,
-    paddingVertical: 13,
-  },
-  googleIcon: { fontSize: 18, fontWeight: '700', color: '#4285F4' },
-  googleText: { ...Typography.button, color: Colors.text, includeFontPadding: false },
   signupRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   signupText: { ...Typography.body, color: Colors.textSecondary, includeFontPadding: false },
   signupLink: { ...Typography.body, color: Colors.primary, fontWeight: '600', includeFontPadding: false },

@@ -5,6 +5,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as WebBrowser from 'expo-web-browser';
 import { storage } from '@/services/storageService';
 import { paymentService } from '@/services/paymentService';
 import { STORAGE_KEYS, PAYMENT_GATEWAYS } from '@/constants/config';
@@ -97,6 +98,7 @@ export default function GatewayDetailScreen() {
   };
 
   const isDefault = settings.defaultGateway === id;
+  const isStripe = id === 'stripe';
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -114,7 +116,7 @@ export default function GatewayDetailScreen() {
           {/* Gateway info */}
           <View style={[styles.gatewayCard, { borderColor: gateway.color + '40' }]}>
             <View style={[styles.gatewayIcon, { backgroundColor: gateway.color + '15' }]}>
-              <Image source={{ uri: gateway.logoUrl }} style={styles.gatewayLogo} contentFit="contain" />
+              <Image source={gateway.logoAsset} style={styles.gatewayLogo} contentFit="contain" />
             </View>
             <View style={styles.gatewayInfo}>
               <Text style={styles.gatewayName}>{gateway.name}</Text>
@@ -148,6 +150,27 @@ export default function GatewayDetailScreen() {
               <MaterialIcons name="lock" size={14} color={Colors.primary} />
               <Text style={styles.securityText}>Secrets are submitted to the secure backend when available. The app only keeps connection status and masked field names.</Text>
             </View>
+            {isStripe ? (
+              <View style={styles.stripeActionsCard}>
+                <Text style={styles.stripeActionsTitle}>Need a Stripe account first?</Text>
+                <View style={styles.stripeActionsRow}>
+                  <Pressable
+                    style={styles.stripeActionBtn}
+                    onPress={() => WebBrowser.openBrowserAsync('https://dashboard.stripe.com/register')}
+                  >
+                    <MaterialIcons name="person-add-alt-1" size={16} color={Colors.primary} />
+                    <Text style={styles.stripeActionText}>Create Stripe Account</Text>
+                  </Pressable>
+                  <Pressable
+                    style={styles.stripeActionBtn}
+                    onPress={() => WebBrowser.openBrowserAsync('https://dashboard.stripe.com/login')}
+                  >
+                    <MaterialIcons name="login" size={16} color={Colors.primary} />
+                    <Text style={styles.stripeActionText}>Sign In to Stripe</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : null}
             {gateway.fields.map((field) => (
               <Input
                 key={field}
@@ -206,7 +229,7 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.xl, gap: Spacing.lg },
   gatewayCard: { flexDirection: 'row', alignItems: 'center', gap: 14, backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, borderWidth: 1.5, ...Shadow.sm },
   gatewayIcon: { width: 52, height: 52, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  gatewayLogo: { width: 30, height: 30, borderRadius: 6, backgroundColor: '#fff' },
+  gatewayLogo: { width: 72, height: 24, borderRadius: 4, backgroundColor: '#fff' },
   gatewayInfo: { flex: 1 },
   gatewayName: { ...Typography.subheading, color: Colors.text, includeFontPadding: false },
   gatewayDesc: { ...Typography.caption, color: Colors.textSecondary, marginTop: 2, includeFontPadding: false },
@@ -220,6 +243,11 @@ const styles = StyleSheet.create({
   featureText: { ...Typography.body, color: Colors.text, includeFontPadding: false },
   securityNote: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, backgroundColor: Colors.primaryLight, padding: Spacing.md, borderRadius: Radius.md },
   securityText: { ...Typography.caption, color: Colors.primary, flex: 1, lineHeight: 18, includeFontPadding: false },
+  stripeActionsCard: { backgroundColor: Colors.surface, borderRadius: Radius.md, padding: Spacing.md, gap: 10, borderWidth: 1, borderColor: Colors.border },
+  stripeActionsTitle: { ...Typography.label, color: Colors.text, includeFontPadding: false },
+  stripeActionsRow: { gap: 8 },
+  stripeActionBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.surfaceSecondary, borderWidth: 1, borderColor: Colors.border, paddingHorizontal: 12, paddingVertical: 10, borderRadius: Radius.md },
+  stripeActionText: { ...Typography.bodySmall, color: Colors.primary, fontWeight: '600', includeFontPadding: false },
   webhookCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, gap: 8, ...Shadow.sm },
   webhookLabel: { ...Typography.label, color: Colors.textSecondary, includeFontPadding: false },
   webhookUrl: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Colors.surfaceSecondary, padding: 10, borderRadius: Radius.sm },

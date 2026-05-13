@@ -56,7 +56,7 @@ export default function GatewaysScreen() {
               style={({ pressed }) => [styles.gatewayCard, pressed && styles.cardPressed]}
             >
               <View style={[styles.gatewayIconWrap, { backgroundColor: item.color + '18' }]}>
-                <Image source={{ uri: item.logoUrl }} style={styles.gatewayLogo} contentFit="contain" />
+                <Image source={item.logoAsset} style={styles.gatewayLogo} contentFit="contain" />
               </View>
               <View style={styles.gatewayInfo}>
                 <View style={styles.gatewayNameRow}>
@@ -86,7 +86,7 @@ export default function GatewaysScreen() {
           <View style={styles.tipCard}>
             <MaterialIcons name="lock" size={14} color={Colors.primary} />
             <Text style={styles.tipText}>
-              Use Stripe for card checkout links and PayPal for PayPal/Venmo flows. Set one as default inside each gateway detail.
+              Use Stripe for card checkout links. Set it as default inside gateway details.
             </Text>
           </View>
         }
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
   gatewayCard: { backgroundColor: Colors.surface, borderRadius: Radius.lg, padding: Spacing.md, flexDirection: 'row', alignItems: 'center', gap: 14, ...Shadow.sm },
   cardPressed: { opacity: 0.88 },
   gatewayIconWrap: { width: 52, height: 52, borderRadius: Radius.md, alignItems: 'center', justifyContent: 'center' },
-  gatewayLogo: { width: 30, height: 30, borderRadius: 6, backgroundColor: '#fff' },
+  gatewayLogo: { width: 72, height: 24, borderRadius: 4, backgroundColor: '#fff' },
   gatewayInfo: { flex: 1, gap: 4 },
   gatewayNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   gatewayName: { ...Typography.subheading, color: Colors.text, includeFontPadding: false },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform, SafeAreaView,
 } from 'react-native';
@@ -28,11 +28,15 @@ export default function BusinessDetailsScreen() {
   const [zipCode, setZipCode] = useState(businessProfile?.zipCode || '');
   const [country, setCountry] = useState(businessProfile?.country || 'United States');
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const addressDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const searchAddresses = async (value: string) => {
     setAddress(value);
-    const suggestions = await addressService.autocomplete(value);
-    setAddressSuggestions(suggestions);
+    if (addressDebounceRef.current) clearTimeout(addressDebounceRef.current);
+    addressDebounceRef.current = setTimeout(async () => {
+      const suggestions = await addressService.autocomplete(value);
+      setAddressSuggestions(suggestions);
+    }, 220);
   };
 
   const applyAddress = (suggestion: AddressSuggestion) => {
@@ -116,6 +120,10 @@ export default function BusinessDetailsScreen() {
             <Input label="Street address" placeholder="123 Main Street" value={address} onChangeText={searchAddresses} leftIcon="home" />
             {addressSuggestions.length > 0 ? (
               <View style={styles.addressDropdown}>
+                <Pressable style={[styles.addressRow, styles.addressHintRow]} onPress={() => applyAddress(addressSuggestions[0])}>
+                  <MaterialIcons name="auto-awesome" size={14} color={Colors.primary} />
+                  <Text style={styles.addressHintText}>Autofill with best match: {addressSuggestions[0].label}</Text>
+                </Pressable>
                 {addressSuggestions.map((suggestion) => (
                   <Pressable key={suggestion.id} style={styles.addressRow} onPress={() => applyAddress(suggestion)}>
                     <Text style={styles.addressRowText}>{suggestion.label}</Text>
@@ -168,6 +176,8 @@ const styles = StyleSheet.create({
   row2: { flexDirection: 'row', gap: 12 },
   flex1: { flex: 1 },
   addressDropdown: { borderWidth: 1, borderColor: Colors.border, borderRadius: Radius.md, overflow: 'hidden', backgroundColor: Colors.surface },
+  addressHintRow: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: Colors.primaryLight },
+  addressHintText: { ...Typography.bodySmall, color: Colors.primary, flex: 1, includeFontPadding: false },
   addressRow: { paddingHorizontal: Spacing.md, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.divider },
   addressRowText: { ...Typography.bodySmall, color: Colors.text, includeFontPadding: false },
 });

@@ -29,11 +29,6 @@ export default function ConnectPaymentsScreen() {
     router.push('/settings/gateway/stripe');
   };
 
-  const handleConnectPayPal = async () => {
-    await completeOnboarding();
-    await finish(router);
-    router.push('/settings/gateway/paypal');
-  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -43,18 +38,12 @@ export default function ConnectPaymentsScreen() {
         </LinearGradient>
         <Text style={styles.title}>Connect Payments Before You Start</Text>
         <Text style={styles.subtitle}>
-          Link Stripe or PayPal now so every invoice can include a live pay link right away.
+          Link Stripe now so every invoice can include a live pay link right away.
         </Text>
 
         <Pressable style={styles.gatewayCard} onPress={handleConnectStripe}>
-          <Image source={{ uri: 'https://logo.clearbit.com/stripe.com' }} style={styles.logo} contentFit="contain" />
+          <Image source={require('@/assets/images/stripe-wordmark.png')} style={styles.logo} contentFit="contain" />
           <Text style={styles.gatewayName}>Stripe</Text>
-          <MaterialIcons name="chevron-right" size={22} color={Colors.textTertiary} />
-        </Pressable>
-
-        <Pressable style={styles.gatewayCard} onPress={handleConnectPayPal}>
-          <Image source={{ uri: 'https://logo.clearbit.com/paypal.com' }} style={styles.logo} contentFit="contain" />
-          <Text style={styles.gatewayName}>PayPal</Text>
           <MaterialIcons name="chevron-right" size={22} color={Colors.textTertiary} />
         </Pressable>
 
@@ -83,7 +72,7 @@ const styles = StyleSheet.create({
     gap: 12,
     ...Shadow.sm,
   },
-  logo: { width: 34, height: 34, borderRadius: 8, backgroundColor: '#fff' },
+  logo: { width: 84, height: 24, borderRadius: 4, backgroundColor: '#fff' },
   gatewayName: { ...Typography.subheading, color: Colors.text, flex: 1, includeFontPadding: false },
   skipBtn: { marginTop: 4, paddingVertical: 10, paddingHorizontal: 18 },
   skipText: { ...Typography.body, color: Colors.textTertiary, includeFontPadding: false },

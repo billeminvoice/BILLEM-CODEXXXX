@@ -85,7 +85,7 @@ export default function AIScanScreen() {
     const ok = await checkScanLimit();
     if (!ok) return;
     const picked = await DocumentPicker.getDocumentAsync({
-      type: ['image/*', 'application/pdf'],
+      type: ['image/*'],
       copyToCacheDirectory: true,
       multiple: false,
     });
