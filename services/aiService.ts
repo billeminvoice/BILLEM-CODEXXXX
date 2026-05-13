@@ -2,6 +2,7 @@ import { getSupabaseClient } from '@/template';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as FileSystem from 'expo-file-system';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Platform } from 'react-native';
 import type { LineItem } from '@/types';
 
 export interface AIExtractionResult {
@@ -23,6 +24,20 @@ export interface AIExtractionResult {
 }
 
 async function uriToBase64(uri: string): Promise<string> {
+  if (Platform.OS === 'web') {
+    const response = await fetch(uri);
+    if (!response.ok) throw new Error('Could not read selected file.');
+    const blob = await response.blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('Failed to convert file for AI scan.'));
+      reader.readAsDataURL(blob);
+    });
+    if (!dataUrl.startsWith('data:')) throw new Error('Invalid file format.');
+    return dataUrl;
+  }
+
   const lower = uri.toLowerCase();
   if (lower.includes('.pdf')) {
     const base64 = await FileSystem.readAsStringAsync(uri, {
